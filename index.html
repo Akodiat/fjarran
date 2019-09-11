@@ -1,0 +1,56 @@
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+
+<html>
+
+    <head>
+        <title>Fjärran - orthogonal sequence generator</title>
+
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+        <script src="lib/cytoscape.min.js"></script>
+        <script src="lib/cola.min.js"></script>
+        <script src="lib/cytoscape-cola.js"></script>
+
+        <style>
+            body {
+                font-family: helvetica;
+                font-size: 14px;
+            }
+
+            #cy {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                left: 0;
+                top: 0;
+                z-index: 999;
+            }
+            
+            #topbar {
+                width: 100%
+            }
+
+            #topbar input {
+                margin: 0 auto;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <div id=topbar>
+            <input id="strandText" type="text" value="ACTGN">
+            <button onclick="fromSequence()">Generate graph</button>
+        </div>
+        
+        <div>
+            <div id="cy"></div>
+        </div>
+        
+        <script src="js/main.js"></script>
+
+    </body>
+
+</html>
+
