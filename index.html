@@ -40,7 +40,10 @@
 
     <body>
         <div id=topbar>
-            <input id="strandText" type="text" value="ACTGN">
+            <input id="strandText" type="text" value="ACTGN"
+                pattern="[AaCcGgTtWwSsMmKkRrYyBbDdHhVvNn]+"
+                title="Use any of A,C,G,T,W,S,M,K,R,Y,B,D,H,V,N"
+                style="text-transform:uppercase">
             <button onclick="fromSequence()">Generate graph</button>
         </div>
         

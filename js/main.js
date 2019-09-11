@@ -62,7 +62,7 @@ function fromSequence(){
         ]
     });
 
-    var s = document.getElementById("strandText").value;
+    var s = document.getElementById("strandText").value.toUpperCase();
     console.log("Input strand: "+s);
     addFromSeq(s, 0)
     
