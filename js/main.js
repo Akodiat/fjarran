@@ -75,7 +75,7 @@ function fromSequence(){
     console.log("Max level: "+maxLevel);
     
     cy.style().selector('node').style({
-        'background-color': 'mapData(level,0,'+maxLevel+',gray,red)'
+        'background-color': `mapData(level,0,${maxLevel},gray,red)`
     }).update()
     
     
@@ -107,4 +107,54 @@ function addFromSeq(seq, level){
             });
         }
     }
+}
+
+function findNMostDistant(nNodes) {
+    var bn = getBoundaryNodes();
+    if (nNodes >= bn.length) {
+        var nodes = bn;
+    } else {
+        var nodes = bn.subtract(bn);
+        var rn = getRandElem(bn.subtract(nodes));
+        console.log(`Selected ${rn.id()} from boundary nodes`);
+        while(true) {
+            nodes = nodes.add(rn);
+            if(nodes.length >= nNodes) {
+                break;
+            }
+            var dijkstra = cy.elements().dijkstra(rn);
+            
+            var furthestNode = bn.subtract(nodes).max(function(e){
+                return dijkstra.distanceTo(e);
+            }).ele;
+
+            console.log(`${furthestNode.id()} is furthest from ${rn.id()}`);
+            nodes = nodes.add(furthestNode);
+            if(nodes.length >= nNodes) {
+                break;
+            }
+            
+            // Find node furthest from pair
+            var dijkstra2 = cy.elements().dijkstra(furthestNode);
+            rn = bn.subtract(nodes).max(function(e){
+                return dijkstra.distanceTo(e) + 
+                      dijkstra2.distanceTo(e);
+            }).ele;
+            
+            console.log(`${rn.id()} is furthest from last pair`);
+        }
+    }
+    var nodeIds = []
+    nodes.forEach(function(node){
+        nodeIds.push(node.id())
+    })
+    return nodeIds;
+}
+
+function getRandElem(list) {
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+function getBoundaryNodes() {
+    return cy.nodes().filter(`[level = ${maxLevel}]`);
 }
