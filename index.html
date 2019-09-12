@@ -44,7 +44,8 @@
                 overflow-y: auto;
                 max-height: 10em;
                 width: 27em;
-                background-color: white;
+                background-color: #d3d7cf;
+                opacity: 0.8;
             }
         </style>
 
@@ -61,7 +62,7 @@
                 <button onclick="fromSequence()">Generate graph</button>
                 <div>
                     <label for="nNodes">Number of nodes to select</label>
-                    <input id="nNodes" type="number" step=1 min=1>
+                    <input id="nNodes" type="number" step=1 min=1 value=2>
                     <button id="nNodesButton" onclick="selectNodes()">Select</button><br>
                     <div class="scrolltext" id=nodesList>
                     </div>

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function(){
-    fromSequence()
+    fromSequence();
+    selected = [];
 });
 
 var m = new Map([
@@ -58,7 +59,14 @@ function fromSequence(){
             {selector: 'edge', css: {
                 'line-color': '#babdb6',
                 'curve-style': 'bezier',
-                'target-arrow-shape': 'triangle'}}
+                'target-arrow-shape': 'triangle'}},
+            {selector: 'node.highlight',
+            style: {
+                'background-color': '#e9b96e',
+                'border-color': '#f57900',
+                'border-width': '5px'
+            }
+        },
         ]
     });
 
@@ -75,7 +83,7 @@ function fromSequence(){
     console.log("Max level: "+maxLevel);
     
     cy.style().selector('node').style({
-        'background-color': `mapData(level,0,${maxLevel},gray,red)`
+        'background-color': `mapData(level,0,${maxLevel},gray,#729fcf)`
     }).update()
 }
 
@@ -96,6 +104,10 @@ function addFromSeq(seq, level){
     var strandLength = seq.length;
     for(var i=0; i<strandLength; i++) {
         var choices = m.get(seq[i]);
+        if(!choices) {
+            console.warn(`"${seq[i]}" is not a valid nucleotide`);
+            continue;
+        }
         if (choices.length > 1) {
             choices.forEach(function(c) {
                 var newSeq = setCharAt(seq,i,c);
@@ -115,6 +127,7 @@ function selectNodes() {
 
 function findNMostDistant(nNodes) {
     var bn = getBoundaryNodes();
+    bn.removeClass('highlight')
     if (nNodes >= bn.length) {
         var nodes = bn;
     } else {
@@ -148,11 +161,12 @@ function findNMostDistant(nNodes) {
             console.log(`${rn.id()} is furthest from last pair`);
         }
     }
-    var nodeIds = []
+    nodes.addClass('highlight')
+    selected = [];
     nodes.forEach(function(node){
-        nodeIds.push(node.id())
+        selected.push(node.id())
     })
-    return nodeIds;
+    return selected;
 }
 
 function getRandElem(list) {
