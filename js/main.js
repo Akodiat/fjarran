@@ -77,9 +77,6 @@ function fromSequence(){
     cy.style().selector('node').style({
         'background-color': `mapData(level,0,${maxLevel},gray,red)`
     }).update()
-    
-    
-;
 }
 
 var maxLevel = 0
@@ -107,6 +104,13 @@ function addFromSeq(seq, level){
             });
         }
     }
+}
+
+function selectNodes() {
+    var nodes = findNMostDistant(document.getElementById('nNodes').value);
+    var listDOM = document.getElementById("nodesList");
+    //listDOM.style.display = "inline";
+    document.getElementById("nodesList").innerHTML = nodes.join(', ');
 }
 
 function findNMostDistant(nNodes) {
