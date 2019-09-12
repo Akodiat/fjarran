@@ -24,6 +24,48 @@ var m = new Map([
   ['N', ['A', 'C', 'G', 'T']]
 ]);
 
+var maxLevel = 0
+
+// Recursively add nodes from a sequence
+function addFromSeq(seq, level){
+    // Keep track of the number of recursive calls
+    if(level > maxLevel) {
+        maxLevel = level;
+    }
+    // Try to add the sequence as a node
+    try {
+        console.log(seq);
+        addNode(seq, level);
+    }
+    catch(e) {
+        // Return if there is already a node for this sequence
+        return;
+    }
+
+    // Loop through each nucleotide in the sequence
+    var strandLength = seq.length;
+    for(var i=0; i<strandLength; i++) {
+        var choices = m.get(seq[i]);
+        // If the nucleotide is not valid
+        if(!choices) {
+            var e = `"${seq[i]}" is not a valid nucleotide`;
+            console.warn(e);
+            document.getElementById('status').innerHTML = e;
+            continue;
+        }
+        // If the nucleotide is not specific
+        if (choices.length > 1) {
+            // For each possible specific nucleotide at the location
+            choices.forEach(function(c) {
+                var newSeq = setCharAt(seq,i,c);
+                // Make a recursive call for the new sequence
+                addFromSeq(newSeq, level+1);
+                // Add a connection in the graph
+                addEdge(seq, newSeq);
+            });
+        }
+    }
+}
 
 // from https://stackoverflow.com/a/1431110
 function setCharAt(str,index,chr) {
@@ -33,19 +75,12 @@ function setCharAt(str,index,chr) {
 
 function addNode(seq, level) {
     cy.add({
-        group: 'nodes',
-        data: {
-            id: seq,
-            level: level
-        },
-        classes: 'top-center'}
-    );
+        group: 'nodes', data: {id: seq, level: level}, classes: 'top-center'
+    });
 }
 
 function addEdge(from, to) {
-    cy.add({group: 'edges',
-        data: {source: from, target: to}
-    });
+    cy.add({group: 'edges', data: {source: from, target: to}});
 }
 
 function fromSequence(){
@@ -60,8 +95,7 @@ function fromSequence(){
                 'line-color': '#babdb6',
                 'curve-style': 'bezier',
                 'target-arrow-shape': 'triangle'}},
-            {selector: 'node.highlight',
-            style: {
+            {selector: 'node.highlight', style: {
                 'background-color': '#e9b96e',
                 'border-color': '#f57900',
                 'border-width': '5px'
@@ -72,10 +106,12 @@ function fromSequence(){
 
     var s = document.getElementById("strandText").value.toUpperCase();
     console.log("Input strand: "+s);
+    document.getElementById('status').innerHTML = '';
     addFromSeq(s, 0)
     
     var layout = cy.layout({
-      name: 'cola'
+      name: 'cola',
+      maxSimulationTime: 10000
     });
 
     layout.run();
@@ -87,81 +123,56 @@ function fromSequence(){
     }).update()
 }
 
-var maxLevel = 0
-
-function addFromSeq(seq, level){
-    if(level > maxLevel) {
-        maxLevel = level;
-    }
-    try {
-        console.log(seq);
-        addNode(seq, level);
-    }
-    catch(e) {
-        // Node already added
-        return;
-    }
-    var strandLength = seq.length;
-    for(var i=0; i<strandLength; i++) {
-        var choices = m.get(seq[i]);
-        if(!choices) {
-            console.warn(`"${seq[i]}" is not a valid nucleotide`);
-            continue;
-        }
-        if (choices.length > 1) {
-            choices.forEach(function(c) {
-                var newSeq = setCharAt(seq,i,c);
-                addFromSeq(newSeq, level+1);
-                addEdge(seq, newSeq);
-            });
-        }
-    }
-}
-
 function selectNodes() {
     var nodes = findNMostDistant(document.getElementById('nNodes').value);
-    var listDOM = document.getElementById("nodesList");
-    //listDOM.style.display = "inline";
     document.getElementById("nodesList").innerHTML = nodes.join(', ');
 }
 
 function findNMostDistant(nNodes) {
+    // Get nodes with a defined sequence:
     var bn = getBoundaryNodes();
     bn.removeClass('highlight')
+    // If you want more nodes that there are, you get all
     if (nNodes >= bn.length) {
         var nodes = bn;
     } else {
-        var nodes = bn.subtract(bn);
-        var rn = getRandElem(bn.subtract(nodes));
-        console.log(`Selected ${rn.id()} from boundary nodes`);
+        // Create empty collection of nodes
+        var nodes = cy.collection();
+        // Select a random node
+        var nodeA = getRandElem(bn);
+        console.log(`Selected ${nodeA.id()} from boundary nodes`);
         while(true) {
-            nodes = nodes.add(rn);
+            nodes = nodes.add(nodeA);
             if(nodes.length >= nNodes) {
                 break;
             }
-            var dijkstra = cy.elements().dijkstra(rn);
+            // Find shortest path from node a to all nodes
+            var dijkstraA = cy.elements().dijkstra(nodeA);
             
-            var furthestNode = bn.subtract(nodes).max(function(e){
-                return dijkstra.distanceTo(e);
+            // calculate which (not yet selected) node b is furthest from a
+            var nodeB = bn.subtract(nodes).max(function(e){
+                return dijkstraA.distanceTo(e);
             }).ele;
 
-            console.log(`${furthestNode.id()} is furthest from ${rn.id()}`);
-            nodes = nodes.add(furthestNode);
+            console.log(`${nodeB.id()} is furthest from ${nodeA.id()}`);
+            nodes = nodes.add(nodeB);
             if(nodes.length >= nNodes) {
                 break;
             }
             
-            // Find node furthest from pair
-            var dijkstra2 = cy.elements().dijkstra(furthestNode);
-            rn = bn.subtract(nodes).max(function(e){
-                return dijkstra.distanceTo(e) + 
-                      dijkstra2.distanceTo(e);
+            // Find node furthest from both a and b
+            var dijkstraB = cy.elements().dijkstra(nodeB);
+            nodeA = bn.subtract(nodes).max(function(e){
+                return dijkstraA.distanceTo(e) * dijkstraB.distanceTo(e);
             }).ele;
             
-            console.log(`${rn.id()} is furthest from last pair`);
+            console.log(`${nodeA.id()} is furthest from last pair`);
         }
     }
+    // Highlight selected nodes
     nodes.addClass('highlight')
+
+    // Return list of node IDs
     selected = [];
     nodes.forEach(function(node){
         selected.push(node.id())
